@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>格納庫 - マイ機体アリーナ</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="hangar.css">
+<script src="paints.js"></script>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0f16">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<script type="importmap">{ "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }</script>
+</head>
+<body class="hangar">
+<header class="top">
+  <a href="./" class="btn ghost">← アリーナ</a>
+  <h1>格納庫</h1>
+  <span class="note">取り込む → 向き → 関節 → 塗装 → 装備</span>
+</header>
+<div class="wrap">
+  <aside class="side">
+    <section class="box">
+      <h2>自分の機体</h2>
+      <div id="list" class="mlist"></div>
+    </section>
+    <section class="box">
+      <h2>新しく取り込む</h2>
+      <label class="lbl">名前 <input type="text" id="newName" placeholder="例: 自作ザク改" maxlength="30"></label>
+      <div id="srvOnly">
+      <label class="btn file">動画・写真を選ぶ<input type="file" id="files" multiple accept="video/*,image/*,.obj,.mtl,.glb,.png,.jpg,.jpeg"></label>
+      <div id="upProg" class="prog hidden"><i></i></div>
+      <p class="note">動画なら30〜60秒、写真なら40〜100枚。3D化はMacの中で数分かかります（無料）。<br>OBJ（＋MTL＋色の画像）やGLBのファイルもそのまま取り込めます。</p>
+      <details><summary>上手に撮るコツ</summary>
+        <ul class="tips">
+          <li>無地の紙や回転台の上に置き、まわりを <b>低い・目の高さ・上から</b> の3周、ゆっくり撮る</li>
+          <li>明るい部屋で、影が強く出ないように。光沢のある部分は<b>つや消しスプレー</b>後が成功しやすい</li>
+          <li>アンテナなど細い部分は形が崩れやすい（ゲームでは気にならない程度）</li>
+          <li>腕と脚を少し体から離した <b>直立ポーズ</b> にすると、関節で切り分けやすい</li>
+          <li>武器は持たせたままでもOK（関節タブで「キットの武器をそのまま使う」）</li>
+        </ul>
+      </details>
+      </div>
+      <div id="phoneOnly" class="hidden">
+        <label class="btn file">3Dモデルのファイルを選ぶ（GLB）<input type="file" id="files2" multiple accept=".glb,.obj,.mtl,.png,.jpg,.jpeg,model/gltf-binary,application/octet-stream"></label>
+        <ol class="tips">
+          <li>無料アプリ <b>Scaniverse</b>（iPhone/Android）を入れる</li>
+          <li>ガンプラを無地の紙の上に立たせ、「Mesh（メッシュ）」→「Small Object（小さい物）」でまわりをぐるっと撮る（低い・目の高さ・上からの3周）</li>
+          <li>処理が終わったら「Share／Export」→ <b>GLB</b> →「ファイルに保存」</li>
+          <li>この画面の上のボタンでそのGLBを選ぶ → ①向き〜④装備へ</li>
+        </ol>
+        <p class="note">ここで作った機体はこのスマホの中だけに保存されます（ネットに送りません）。テカテカした部分はつや消しスプレー後が成功しやすいです。</p>
+      </div>
+      <div id="qr" class="qr"></div>
+    </section>
+    <section class="box" id="s3box">
+      <h2>スキャン工房から</h2>
+      <div id="s3list" class="note">読みこみ中…</div>
+    </section>
+  </aside>
+
+  <main class="stage">
+    <canvas id="hv"></canvas>
+    <div id="empty" class="empty">左から機体を選ぶか、新しく取り込んでください</div>
+    <div id="busy" class="empty hidden"></div>
+    <div class="viewbtns"><button id="vFront" class="btn ghost">正面</button><button id="vSide" class="btn ghost">横</button><button id="vWalk" class="btn ghost">歩かせる</button></div>
+  </main>
+
+  <aside class="panel" id="panel">
+    <div class="namebar"><input type="text" id="mName" maxlength="30"><button id="save" class="btn">保存</button></div>
+    <nav class="tabs">
+      <button data-t="orient" class="on">① 向き</button><button data-t="joint">② 関節</button><button data-t="paint">③ 塗装</button><button data-t="equip">④ 装備</button>
+    </nav>
+
+    <div class="tab" id="t-orient">
+      <p class="note">機体がまっすぐ立って、<b>青い矢印の方を向く</b>ようにします。</p>
+      <div class="grid3">
+        <button class="btn ghost" data-o="x+">前に倒す</button><button class="btn ghost" data-o="x-">後ろに倒す</button><button class="btn ghost" data-o="z+">横に倒す</button>
+        <button class="btn ghost" data-o="y+">右に90°</button><button class="btn ghost" data-o="y-">左に90°</button><button class="btn ghost" data-o="reset">元に戻す</button>
+      </div>
+      <label class="lbl">細かく回す <input type="range" id="oYaw" min="-45" max="45" step="1"><span id="oYawV"></span></label>
+      <label class="lbl">下の台・床を消す <input type="range" id="oCut" min="0" max="0.3" step="0.005"><span id="oCutV"></span></label>
+      <label class="chk"><input type="checkbox" id="oKeep" checked> 離れたゴミ（小さなかけら）を消す</label>
+      <p class="note" id="triInfo"></p>
+    </div>
+
+    <div class="tab hidden" id="t-joint">
+      <p class="note">色ごとに動く部品です。<span style="color:#c9ccd3">■胴</span> <span style="color:#ff5a5a">■右腕</span> <span style="color:#5a9bff">■左腕</span> <span style="color:#ffb43a">■右脚</span> <span style="color:#4fd18b">■左脚</span></p>
+      <label class="lbl">腰の高さ（ここより下が脚） <input type="range" id="jWaist" min="0.25" max="0.7" step="0.005"><span id="jWaistV"></span></label>
+      <label class="lbl">腕の始まり（体の中心からの広さ） <input type="range" id="jShoulder" min="0.15" max="0.9" step="0.005"><span id="jShoulderV"></span></label>
+      <label class="lbl">腕の上の端（肩の高さ） <input type="range" id="jArmTop" min="0.6" max="1" step="0.005"><span id="jArmTopV"></span></label>
+      <label class="lbl">腕の下の端（手の先） <input type="range" id="jArmBottom" min="0" max="0.6" step="0.005"><span id="jArmBottomV"></span></label>
+      <label class="lbl">頭の付け根 <input type="range" id="jNeck" min="0.6" max="0.98" step="0.005"><span id="jNeckV"></span></label>
+      <label class="chk"><input type="checkbox" id="jHide"> キットの武器をそのまま使う（ゲームの武器の見た目を付けない）</label>
+      <label class="chk"><input type="checkbox" id="jPaintView"> 塗装の色で見る</label>
+    </div>
+
+    <div class="tab hidden" id="t-paint">
+      <p class="note">配色ラボと同じしくみ。色ごとのグループを選んで塗り替えます。影やツヤは元のまま残ります。</p>
+      <div id="groups" class="groups"></div>
+      <div id="gEdit" class="gedit hidden">
+        <div class="row"><b id="gName"></b><input type="color" id="gColor"><button id="gReset" class="btn ghost">元の色</button></div>
+        <div id="presets" class="presets"></div>
+        <label class="lbl">ツヤ <input type="range" id="gGloss" min="0" max="1" step="0.01"><span id="gGlossV"></span></label>
+        <label class="lbl">メタリック <input type="range" id="gMetal" min="0" max="1" step="0.01"><span id="gMetalV"></span></label>
+        <details><summary>市販の塗料から選ぶ</summary>
+          <input type="text" id="pSearch" placeholder="色名・番号（例: C33, ブルー, ガンダムカラー）">
+          <div id="pList" class="plist"></div>
+        </details>
+      </div>
+      <div class="row"><button id="pAllReset" class="btn ghost">塗装を全部元に戻す</button></div>
+    </div>
+
+    <div class="tab hidden" id="t-equip">
+      <label class="lbl">フレーム <select id="eFrame"></select></label>
+      <label class="lbl">右手 <select id="eR"></select></label>
+      <label class="lbl">左手 <select id="eL"></select></label>
+      <label class="lbl">肩 <select id="eS"></select></label>
+      <div id="eDesc" class="note"></div>
+      <div id="eStats" class="stats"></div>
+      <label class="lbl">CPUとして戦う時の性格 <select id="eAi"></select></label>
+    </div>
+
+    <div class="row foot"><button id="sortie" class="btn big">この機体で出撃</button><button id="del" class="btn ghost hidden">この機体を消す</button></div>
+    <p class="note" id="saveMsg"></p>
+  </aside>
+</div>
+<script type="module" src="hangar.js"></script>
+</body>
+</html>

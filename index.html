@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>マイ機体アリーナ</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0f16">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<script type="importmap">{ "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }</script>
+</head>
+<body class="game">
+<canvas id="view"></canvas>
+
+<!-- メニュー -->
+<div id="menu" class="overlay">
+  <div class="menu-inner">
+    <header class="title">
+      <h1>マイ機体アリーナ</h1>
+      <p>自分で作ったガンプラをスキャンして、塗って、戦わせる。全部無料・Macの中だけで動きます。</p>
+    </header>
+    <section>
+      <div class="sec-head"><h2>① 自分の機体</h2><a class="btn ghost" href="hangar.html">格納庫へ（取り込み・関節・塗装・装備）</a></div>
+      <div id="myList" class="cards"></div>
+    </section>
+    <section>
+      <h2>② 相手</h2>
+      <div id="foeList" class="cards"></div>
+    </section>
+    <section class="actions">
+      <button id="btnStart" class="btn big">出撃する</button>
+      <button id="btnWatch" class="btn">AIどうしの対戦を観る</button>
+      <button id="btnBalance" class="btn">AI総当たりで強さを調べる</button>
+    </section>
+    <p id="rotHint" class="note hidden">📱 スマホは<b>横向き</b>にすると遊びやすいです。ホーム画面に追加すると全画面のアプリになります（Safariの共有ボタン →「ホーム画面に追加」）。</p>
+    <details class="help">
+      <summary>操作方法</summary>
+      <div class="help-grid">
+        <div><b>キーボード＋マウス</b><br>WASD 移動 ／ マウス 視点 ／ 左クリック 右手の武器 ／ 右クリック 左手（盾・サーベル）／ Q 肩の武器 ／ スペース 上昇 ／ Shift 回避ブースト ／ Esc 一時停止</div>
+        <div><b>コントローラー</b><br>左スティック 移動 ／ 右スティック 視点 ／ RT 右手 ／ LT 左手 ／ RB 肩 ／ A 上昇 ／ B 回避</div>
+        <div><b>スマホ</b><br>左下のスティックで移動、右側をなぞって視点。ボタンで攻撃・上昇・回避</div>
+      </div>
+      <p class="note">弾は狙った方向の近くにいる敵へ自動で向かいます（ロックオン）。回避ブーストで横に動くと弾やミサイルを外せます。</p>
+    </details>
+  </div>
+</div>
+
+<!-- AI総当たり -->
+<div id="balance" class="overlay hidden">
+  <div class="menu-inner">
+    <h2>AI総当たり（画面なしで高速に戦わせる）</h2>
+    <p class="note">動画の「800戦」と同じ考え方です。強すぎる武器・弱すぎる組み合わせを見つけるのに使います。部品の数字は public/data.js にあります。</p>
+    <div class="row"><label>1組あたり <select id="balN"><option>10</option><option selected>30</option><option>100</option></select> 戦</label>
+      <button id="balRun" class="btn">始める</button><button id="balClose" class="btn ghost">閉じる</button></div>
+    <div id="balOut"></div>
+  </div>
+</div>
+
+<!-- 戦闘中の表示 -->
+<div id="hud" class="hidden">
+  <div id="foeBars"></div>
+  <div id="timer">3:00</div>
+  <div id="reticle"></div>
+  <div id="lockBox" class="hidden"></div>
+  <div id="warn" class="hidden"></div>
+  <div id="me">
+    <div class="name" id="meName"></div>
+    <div class="bar hp"><i id="meHp"></i><span id="meHpN"></span></div>
+    <div class="bar en"><i id="meEn"></i></div>
+  </div>
+  <div id="weapons"></div>
+  <div id="pops"></div>
+  <div id="spect" class="hidden">AIどうしの対戦を観戦中 ／ 1・2 で視点切りかえ ／ Esc で戻る</div>
+</div>
+
+<!-- スマホ操作 -->
+<div id="touch" class="hidden">
+  <div id="stick"><i></i></div>
+  <div id="tbtns">
+    <button data-k="fireS">肩</button><button data-k="fireL">左</button>
+    <button data-k="jump">上昇</button><button data-k="dash">回避</button>
+    <button data-k="fireR" class="main">撃つ</button>
+  </div>
+  <button id="tpause">Ⅱ</button>
+</div>
+
+<div id="pause" class="overlay hidden"><div class="menu-inner small">
+  <h2>一時停止</h2><button id="btnResume" class="btn big">つづける</button><button id="btnQuit" class="btn ghost">メニューに戻る</button>
+</div></div>
+
+<div id="result" class="overlay hidden"><div class="menu-inner small">
+  <h2 id="resTitle"></h2><div id="resBody"></div>
+  <div class="row"><button id="btnAgain" class="btn big">もう一戦</button><button id="btnMenu" class="btn ghost">メニュー</button></div>
+</div></div>
+
+<div id="loading" class="overlay hidden"><div class="menu-inner small"><h2>機体を準備中…</h2><p id="loadMsg" class="note"></p></div></div>
+
+<script type="module" src="game.js"></script>
+</body>
+</html>

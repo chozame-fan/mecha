@@ -1,0 +1,63 @@
+body.hangar { min-height: 100%; }
+.top { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.top h1 { margin: 0; font-size: 22px; }
+.wrap { display: grid; grid-template-columns: 290px 1fr 360px; height: calc(100vh - 58px); }
+.side, .panel { overflow-y: auto; padding: 12px; }
+.side { border-right: 1px solid var(--line); }
+.panel { border-left: 1px solid var(--line); }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+.box h2 { font-size: 15px; }
+.mlist { display: grid; gap: 6px; }
+.mi { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.mi.sel { border-color: var(--accent); background: rgba(79,195,255,.08); }
+.mi .s { font-size: 12px; color: var(--dim); }
+.mi .prog { margin-top: 5px; }
+.lbl { display: grid; gap: 4px; margin: 10px 0; font-size: 13px; color: var(--dim); }
+.lbl input[type=range] { width: 100%; }
+.lbl span { color: var(--text); font-size: 12px; }
+.chk { display: flex; gap: 6px; align-items: center; font-size: 13px; margin: 8px 0; }
+.btn.file { position: relative; overflow: hidden; display: block; text-align: center; margin: 8px 0; }
+.btn.file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.tips { font-size: 13px; line-height: 1.7; padding-left: 18px; color: var(--dim); }
+.qr { text-align: center; font-size: 12px; color: var(--dim); }
+.qr img { width: 150px; border-radius: 8px; background: #fff; padding: 6px; }
+.stage { position: relative; min-height: 300px; }
+#hv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--dim); text-align: center; padding: 20px; pointer-events: none; }
+.viewbtns { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 6px; }
+.viewbtns .btn { padding: 6px 10px; font-size: 13px; background: rgba(0,0,0,.4); }
+.viewbtns .btn.on { border-color: var(--accent); }
+.namebar { display: flex; gap: 8px; }
+.namebar input { flex: 1; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 12px 0; }
+.tabs button { background: #121a26; border: 1px solid var(--line); color: var(--dim); border-radius: 8px; padding: 8px 2px; font: inherit; font-size: 13px; cursor: pointer; }
+.tabs button.on { color: #fff; border-color: var(--accent); background: rgba(79,195,255,.12); }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.grid3 .btn { padding: 8px 4px; font-size: 13px; }
+.groups { display: grid; gap: 6px; }
+.grp { display: grid; grid-template-columns: 30px 30px 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 13px; }
+.grp.sel { border-color: var(--accent); }
+.grp i { width: 30px; height: 22px; border-radius: 5px; border: 1px solid rgba(255,255,255,.25); }
+.grp .arrow { text-align: center; color: var(--dim); }
+.gedit { margin-top: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(0,0,0,.2); }
+.gedit input[type=color] { width: 44px; height: 32px; border: none; background: none; padding: 0; }
+.presets { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+.presets button { aspect-ratio: 1; border-radius: 6px; border: 1px solid rgba(255,255,255,.2); cursor: pointer; }
+.plist { max-height: 200px; overflow-y: auto; display: grid; gap: 3px; margin-top: 6px; }
+.plist div { display: grid; grid-template-columns: 20px 1fr; gap: 6px; font-size: 12px; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+.plist div:hover { background: rgba(255,255,255,.06); }
+.plist i { width: 20px; height: 16px; border-radius: 3px; }
+#pSearch { width: 100%; margin-top: 6px; }
+.stats { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 13px; margin: 10px 0; }
+.stats .b { height: 8px; background: #1b2433; border-radius: 4px; overflow: hidden; align-self: center; }
+.stats .b i { display: block; height: 100%; background: var(--accent); }
+.foot { margin-top: 18px; }
+@media (max-width: 1000px) {
+  .wrap { grid-template-columns: 1fr; height: auto; }
+  .stage { height: 62vh; order: -1; }
+  .side, .panel { border: none; }
+  .side { order: 2; }
+  body.nomech .side { order: -2; }
+  body.nomech .panel { display: none; }
+  .stage { position: sticky; top: 0; z-index: 2; height: 46vh; }
+}
